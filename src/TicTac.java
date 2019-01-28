@@ -65,22 +65,17 @@ public class TicTac {
         String postion = "NA";
         int i = cell.getX();
         int j = cell.getY();
-//        for(int i=0; i<gridSize; i++) {
-//            for(int j=0; j<gridSize; j++) {
-                if(i == ((gridSize-1)/2) && j == ((gridSize-1)/2)) {
-                    postion = Constants.CENTER;
-                }else if(isCornerCells(i, j)){
-                    postion = Constants.CORNER;
-                }else {
-                    postion = Constants.MIDDLE;
-                }
-//            }
-//        }
+        if(i == ((gridSize-1)/2) && j == ((gridSize-1)/2)) {
+            postion = Constants.CENTER;
+        }else if(isCornerCells(i, j)) {
+            postion = Constants.CORNER;
+        }else {
+            postion = Constants.MIDDLE;
+        }
         return postion;
     }
 
-    public ArrayList<Cell> getAllSlotsOfTheBoard() {
-//        int gridSize = (int) Math.sqrt(boardLength);
+    private ArrayList<Cell> getAllSlotsOfTheBoard() {
         ArrayList<Cell> cellList = new ArrayList<Cell>();
         for(int i=0; i<gridSize; i++) {
             for(int j=0; j<gridSize; j++) {
@@ -98,13 +93,6 @@ public class TicTac {
                         cellList.add(new Cell(i, j, Constants.MIDDLE));
                         break;
                 }
-//                if(i == ((gridSize-1)/2) && j == ((gridSize-1)/2)) {
-//                    cellList.add(new Cell(i, j, Constants.CENTER));
-//                }else if(isCornerCells(i, j)){
-//                    cellList.add(new Cell(i, j, Constants.CORNER));
-//                }else {
-//                    cellList.add(new Cell(i, j, Constants.MIDDLE));
-//                }
             }
         }
         return cellList;
@@ -135,10 +123,12 @@ public class TicTac {
     private int getCorrespondingValueForTheCellInHashMap(Cell cell) {
         int value = -1;
         Set<Cell> keySet = this.markedCellMap.keySet();
-        for (Cell key : keySet) {
-            if(key.getX() == cell.getX() && key.getY() == cell.getX()) {
-                value = this.markedCellMap.get(key);
-                break;
+        if(keySet.size() > 0) {
+            for (Cell key : keySet) {
+                if(key.getX() == cell.getX() && key.getY() == cell.getY()) {
+                    value = this.markedCellMap.get(key);
+                    break;
+                }
             }
         }
         return value;
@@ -249,6 +239,46 @@ public class TicTac {
         return  straightPaths;
     }
 
+    private ArrayList<Cell> getCenterColumn() {
+        ArrayList<Cell> centerColumn = new ArrayList<>();
+        int x = (gridSize - 1)/2;
+        int y = (gridSize - 1)/2;
+        for (int i=startIndex; i<gridSize; i++) {
+            centerColumn.add(new Cell(x, i));
+        }
+        return centerColumn;
+    }
+
+    private ArrayList<Cell> getCenterRow() {
+        ArrayList<Cell> centerColumn = new ArrayList<>();
+        int x = (gridSize - 1)/2;
+        int y = (gridSize - 1)/2;
+        for (int i=startIndex; i<gridSize; i++) {
+            centerColumn.add(new Cell(i, y));
+        }
+        return centerColumn;
+    }
+
+    private ArrayList<ArrayList<Cell>> generateStraightPathsForMiddleCells(Cell cell) {
+        ArrayList<ArrayList<Cell>> straightPaths = new ArrayList<>();
+        int x = cell.getX();
+        int y = cell.getY();
+        ArrayList<Cell> path = new ArrayList<>();
+        for (int i=startIndex; i<gridSize; i++) {
+            //keeping y constant and changing x value
+            path.add(new Cell(i, y));
+        }
+        straightPaths.add(getClonedArrayList(path));
+        path.clear();
+        for (int i=startIndex; i<gridSize; i++) {
+            //keeping x constant and changing y value
+            path.add(new Cell(x, i));
+        }
+        straightPaths.add(getClonedArrayList(path));
+        path.clear();
+        return straightPaths;
+    }
+
     private ArrayList<ArrayList<Cell>> getAdjacentPathsForCell(Cell cell) {
         ArrayList<ArrayList<Cell>> paths = new ArrayList<>();
         switch (cell.getPosition()) {
@@ -264,9 +294,16 @@ public class TicTac {
                 break;
             }
             case Constants.CENTER: {
+                paths.add(getRightDiagoalOfBoard());
+                paths.add(getLeftDiagoalOfBoard());
+                paths.add(getCenterColumn());
+                paths.add(getCenterRow());
                 break;
             }
             case Constants.MIDDLE: {
+                for (ArrayList<Cell> pathArray: generateStraightPathsForMiddleCells(cell)) {
+                    paths.add(pathArray);
+                }
                 break;
             }
             default:{
